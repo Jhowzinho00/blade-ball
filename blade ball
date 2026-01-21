@@ -1,0 +1,105 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Blade Ball | Premium Hub",
+   LoadingTitle = "Verificando Credenciais...",
+   LoadingSubtitle = "Sistema de Key",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "BladeBallPro",
+      FileName = "MainConfig"
+   },
+   KeySystem = true, -- Ativa o sistema de chave
+   KeySettings = {
+      Title = "Sistema de Verificação",
+      Subtitle = "Digite a Key para acessar",
+      Note = "pega key no tik tok", -- Nota atualizada aqui
+      FileName = "BladeBallKey",
+      SaveKey = true, 
+      GrabKeyFromSite = false, 
+      Key = {"arthur gay"} 
+   }
+})
+
+-- Variáveis de Controle
+local AutoParryEnabled = false
+local AutoSpamEnabled = false
+local DistanceThreshold = 15
+local SpamDistance = 10
+
+local Tab = Window:CreateTab("Principal", 4483362458)
+local CombatTab = Window:CreateTab("Combate", 4483362458)
+
+-- Lógica do Script (Parry & Spam)
+task.spawn(function()
+    while task.wait() do
+        local char = game.Players.LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then continue end
+
+        for _, ball in pairs(game.Workspace.Balls:GetChildren()) do
+            if ball:FindFirstChild("zoomies") then
+                local ballDist = (ball.Position - hrp.Position).Magnitude
+                local velocity = ball.Velocity.Magnitude
+                
+                -- Lógica de Spam (Duelo de curta distância)
+                if AutoSpamEnabled and ballDist <= SpamDistance then
+                    game:GetService("ReplicatedStorage").Remotes.Parry:FireServer()
+                
+                -- Lógica de Auto-Parry (Rebate automático)
+                elseif AutoParryEnabled then
+                    local dynamicDist = DistanceThreshold + (velocity * 0.1)
+                    if ballDist <= dynamicDist then
+                        game:GetService("ReplicatedStorage").Remotes.Parry:FireServer()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+--- Interface Principal ---
+Tab:CreateToggle({
+   Name = "Ativar Auto-Parry",
+   CurrentValue = false,
+   Flag = "ParryToggle",
+   Callback = function(Value)
+      AutoParryEnabled = Value
+   end,
+})
+
+Tab:CreateSlider({
+   Name = "Distância de Reação",
+   Range = {10, 60},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 15,
+   Flag = "DistSlider",
+   Callback = function(Value)
+      DistanceThreshold = Value
+   end,
+})
+
+--- Interface Combate ---
+CombatTab:CreateToggle({
+   Name = "Auto-Spam (Duelo)",
+   CurrentValue = false,
+   Flag = "SpamToggle",
+   Callback = function(Value)
+      AutoSpamEnabled = Value
+   end,
+})
+
+CombatTab:CreateSlider({
+   Name = "Distância do Spam",
+   Range = {5, 20},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 10,
+   Flag = "SpamDistSlider",
+   Callback = function(Value)
+      SpamDistance = Value
+   end,
+})
+
+Rayfield:LoadConfiguration()
